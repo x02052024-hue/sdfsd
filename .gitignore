@@ -1,5 +1,1 @@
-(js/main.js, js/modules/points-renderer.js are source files, no build artifacts, dependencies, or temp files in the changes)
-
-```javascript
-
-```
+(js/generators/object-generators.js)

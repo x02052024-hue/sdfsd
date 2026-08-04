@@ -270,9 +270,10 @@ export const ObjectGenerators = {
                 const p0 = vertices[v0];
                 const p1 = vertices[v1];
                 const p2 = vertices[v2];
+                const p3 = vertices[v3];
                 
                 const edge1 = Vec3.sub(p1, p0);
-                const edge2 = Vec3.sub(p3 || vertices[v3], p0);
+                const edge2 = Vec3.sub(p3, p0);
                 const normal = Vec3.normalize(Vec3.cross(edge1, edge2));
                 
                 const color = this.getColorForTorus(i, j, majorSegments, minorSegments);
