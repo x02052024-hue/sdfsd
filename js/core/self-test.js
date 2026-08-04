@@ -157,6 +157,10 @@ export class SelfTester {
             const renderer = new SurfaceRenderer(tempCanvas);
             const sphere = generateSphere(1, 16, 16);
             
+            if (!sphere || !sphere.vertices || sphere.vertices.length === 0) {
+                throw new Error("Sphere generation failed");
+            }
+            
             // Project vertices first
             const viewMatrix = this.camera.getViewMatrix();
             const projMatrix = this.camera.getProjectionMatrix();
@@ -167,12 +171,24 @@ export class SelfTester {
             
             // Convert indices to triangles format expected by renderer
             const triangles = [];
-            for (let i = 0; i < sphere.indices.length; i += 3) {
-                triangles.push({
-                    v0: sphere.indices[i],
-                    v1: sphere.indices[i + 1],
-                    v2: sphere.indices[i + 2],
-                    color: '#cccccc'
+            if (sphere.indices && sphere.indices.length > 0) {
+                for (let i = 0; i < sphere.indices.length; i += 3) {
+                    triangles.push({
+                        v0: sphere.indices[i],
+                        v1: sphere.indices[i + 1],
+                        v2: sphere.indices[i + 2],
+                        color: '#cccccc'
+                    });
+                }
+            } else if (sphere.triangles && sphere.triangles.length > 0) {
+                // Use triangles directly if indices are not available
+                sphere.triangles.forEach(tri => {
+                    triangles.push({
+                        v0: tri.v0,
+                        v1: tri.v1,
+                        v2: tri.v2,
+                        color: tri.color || '#cccccc'
+                    });
                 });
             }
             
@@ -181,7 +197,7 @@ export class SelfTester {
                 renderer.render(validVertices, triangles, viewMatrix);
                 this.log('SurfaceRenderer', 'PASS', 'Render with backface culling executed');
             } else {
-                this.log('SurfaceRenderer', 'WARN', 'No valid vertices or triangles to render');
+                this.log('SurfaceRenderer', 'WARN', `No valid data: ${validVertices.length} verts, ${triangles.length} triangles`);
             }
         } catch (e) {
             this.log('SurfaceRenderer', 'FAIL', e.message);
@@ -293,25 +309,28 @@ export class SelfTester {
     async testGenerators() {
         try {
             const cube = generateCube(1);
-            if (cube.vertices.length > 0 && cube.indices.length > 0) {
-                this.log('Generators', 'PASS', `Cube generated: ${cube.vertices.length} verts, ${cube.indices.length} indices`);
-            } else {
-                this.log('Generators', 'FAIL', 'Cube generation empty');
+            if (!cube || !cube.vertices || cube.vertices.length === 0) {
+                throw new Error("Cube has no vertices");
             }
+            if (!cube.indices || cube.indices.length === 0) {
+                // Some generators use triangles instead of indices
+                if (!cube.triangles || cube.triangles.length === 0) {
+                    throw new Error("Cube has no indices or triangles");
+                }
+            }
+            this.log('Generators', 'PASS', `Cube generated: ${cube.vertices.length} verts`);
 
             const sphere = generateSphere(1, 8, 8);
-            if (sphere.vertices.length > 0) {
-                this.log('Generators', 'PASS', `Sphere generated: ${sphere.vertices.length} verts`);
-            } else {
-                this.log('Generators', 'FAIL', 'Sphere generation empty');
+            if (!sphere || !sphere.vertices || sphere.vertices.length === 0) {
+                throw new Error("Sphere has no vertices");
             }
+            this.log('Generators', 'PASS', `Sphere generated: ${sphere.vertices.length} verts`);
 
             const terrain = generateTerrain(16, 16, 1);
-            if (terrain.vertices.length > 0) {
-                this.log('Generators', 'PASS', `Terrain generated: ${terrain.vertices.length} verts`);
-            } else {
-                this.log('Generators', 'FAIL', 'Terrain generation empty');
+            if (!terrain || !terrain.vertices || terrain.vertices.length === 0) {
+                throw new Error("Terrain has no vertices");
             }
+            this.log('Generators', 'PASS', `Terrain generated: ${terrain.vertices.length} verts`);
         } catch (e) {
             this.log('Generators', 'FAIL', e.message);
         }
