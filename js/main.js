@@ -14,6 +14,7 @@ import { VoxelRenderer, VoxelScene, Voxel } from './modules/voxel-renderer.js';
 import { ObjectGenerators } from './generators/object-generators.js';
 import { TerrainGenerator } from './generators/terrain-generator.js';
 import { UIManager } from './ui/ui-manager.js';
+import { SelfTester } from './core/self-test.js';
 
 class Application {
     constructor() {
@@ -57,11 +58,27 @@ class Application {
         // Setup module callbacks
         this.setupModuleCallbacks();
         
+        // Add self-test button to UI
+        this.addSelfTestButton();
         // Start with perspective module
         this.uiManager.activateModule('perspective');
         
         // Start animation loop
         this.animate();
+    }
+
+    addSelfTestButton() {
+        const controlsPanel = document.getElementById('module-controls');
+        const testBtn = document.createElement('button');
+        testBtn.textContent = '🧪 Run Self-Test';
+        testBtn.style.background = '#9b59b6';
+        testBtn.style.marginTop = '1rem';
+        testBtn.onclick = async () => {
+            console.log("Running self-tests...");
+            const tester = new SelfTester();
+            await tester.runAllTests();
+        };
+        controlsPanel.appendChild(testBtn);
     }
 
     resizeCanvas() {
