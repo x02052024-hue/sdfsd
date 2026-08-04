@@ -68,13 +68,24 @@ class Application {
     }
 
     addSelfTestButton() {
+        // Also attach to existing button in HTML if present
+        const existingBtn = document.getElementById('run-self-test-btn');
+        if (existingBtn) {
+            existingBtn.onclick = async () => {
+                console.log("Running self-tests...");
+                const tester = new SelfTester();
+                await tester.runAllTests();
+            };
+        }
+        
+        // Add additional button to controls panel
         const controlsPanel = document.getElementById('module-controls');
         const testBtn = document.createElement('button');
         testBtn.textContent = '🧪 Run Self-Test';
         testBtn.style.background = '#9b59b6';
         testBtn.style.marginTop = '1rem';
         testBtn.onclick = async () => {
-            console.log("Running self-tests...");
+            console.log("Running self-tests from panel...");
             const tester = new SelfTester();
             await tester.runAllTests();
         };

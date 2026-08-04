@@ -19,7 +19,8 @@ export class SelfTester {
         this.camera = new Camera();
         this.camera.position = new Vec3(0, 0, -5);
         this.camera.target = new Vec3(0, 0, 0);
-        this.projector = new Projector(this.width, this.height);
+        this.projector = new Projector(this.camera);
+        this.projector.setViewport(this.width, this.height);
     }
 
     async runAllTests() {
@@ -91,15 +92,21 @@ export class SelfTester {
     async testPointsRenderer() {
         try {
             const { PointsRenderer } = await import('../modules/points-renderer.js');
-            const renderer = new PointsRenderer(this.width, this.height);
+            // Create a temporary canvas for testing
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = this.width;
+            tempCanvas.height = this.height;
+            const renderer = new PointsRenderer(tempCanvas);
             const points = [new Vec3(0,0,0), new Vec3(1,1,1), new Vec3(-1,-1,-1)];
             
-            renderer.clear();
-            renderer.render(points, this.camera, this.projector);
+            // Project points first
+            const viewMatrix = this.camera.getViewMatrix();
+            const projMatrix = this.camera.getProjectionMatrix();
+            const projectedPoints = this.projector.projectPoints(points, null, viewMatrix, projMatrix);
             
-            // Check internal buffer or draw calls simulation
-            // Since we can't easily count canvas pixels without reading image data, 
-            // we check if the render method executed without error and if points were transformed
+            renderer.clear();
+            renderer.render(projectedPoints);
+            
             this.log('PointsRenderer', 'PASS', 'Render method executed successfully');
         } catch (e) {
             this.log('PointsRenderer', 'FAIL', e.message);
@@ -109,11 +116,19 @@ export class SelfTester {
     async testWireframeRenderer() {
         try {
             const { WireframeRenderer } = await import('../modules/wireframe-renderer.js');
-            const renderer = new WireframeRenderer(this.width, this.height);
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = this.width;
+            tempCanvas.height = this.height;
+            const renderer = new WireframeRenderer(tempCanvas);
             const cube = generateCube(1);
             
+            // Project vertices first
+            const viewMatrix = this.camera.getViewMatrix();
+            const projMatrix = this.camera.getProjectionMatrix();
+            const projectedVertices = this.projector.projectPoints(cube.vertices, null, viewMatrix, projMatrix);
+            
             renderer.clear();
-            renderer.render(cube, this.camera, this.projector);
+            renderer.render(projectedVertices);
             
             this.log('WireframeRenderer', 'PASS', 'Render method executed successfully');
         } catch (e) {
@@ -124,13 +139,31 @@ export class SelfTester {
     async testSurfaceRenderer() {
         try {
             const { SurfaceRenderer } = await import('../modules/surface-renderer.js');
-            const renderer = new SurfaceRenderer(this.width, this.height);
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = this.width;
+            tempCanvas.height = this.height;
+            const renderer = new SurfaceRenderer(tempCanvas);
             const sphere = generateSphere(1, 16, 16);
             
-            renderer.clear();
-            renderer.render(sphere, this.camera, this.projector);
+            // Project vertices first
+            const viewMatrix = this.camera.getViewMatrix();
+            const projMatrix = this.camera.getProjectionMatrix();
+            const projectedVertices = this.projector.projectPoints(sphere.vertices, null, viewMatrix, projMatrix);
             
-            // Verify backface culling logic ran (no errors thrown)
+            // Convert indices to triangles format expected by renderer
+            const triangles = [];
+            for (let i = 0; i < sphere.indices.length; i += 3) {
+                triangles.push({
+                    v0: sphere.indices[i],
+                    v1: sphere.indices[i + 1],
+                    v2: sphere.indices[i + 2],
+                    color: '#cccccc'
+                });
+            }
+            
+            renderer.clear();
+            renderer.render(projectedVertices, triangles, viewMatrix);
+            
             this.log('SurfaceRenderer', 'PASS', 'Render with backface culling executed');
         } catch (e) {
             this.log('SurfaceRenderer', 'FAIL', e.message);
@@ -139,12 +172,17 @@ export class SelfTester {
 
     async testRaytracer() {
         try {
-            const { Raytracer } = await import('../modules/raytracer.js');
-            const renderer = new Raytracer(this.width, this.height);
+            const { RayTracer, Sphere } = await import('../modules/raytracer.js');
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = 200; // Use smaller size for faster test
+            tempCanvas.height = 150;
+            const renderer = new RayTracer(tempCanvas);
             
-            // Run a low-res trace to test logic
-            renderer.setScene([generateSphere(0.5, 16, 16)]);
-            await renderer.renderFrame(this.camera); // This might be async
+            // Add a sphere to the scene
+            const sphere = new Sphere(new Vec3(0, 0, -5), 1, '#ff0000');
+            renderer.addObject(sphere);
+            
+            renderer.render(this.camera, this.projector);
             
             this.log('Raytracer', 'PASS', 'Raytrace frame completed');
         } catch (e) {
@@ -154,11 +192,21 @@ export class SelfTester {
 
     async testMathSurface() {
         try {
-            const { MathSurfaceRenderer } = await import('../modules/math-surface-renderer.js');
-            const renderer = new MathSurfaceRenderer(this.width, this.height);
+            const { MathSurfaceRenderer, MathFunctions } = await import('../modules/math-surface-renderer.js');
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = this.width;
+            tempCanvas.height = this.height;
+            const renderer = new MathSurfaceRenderer(tempCanvas);
             
-            renderer.setFunction('sin');
-            renderer.render(this.camera, this.projector);
+            renderer.setFunction(MathFunctions.sin);
+            
+            // Generate and project vertices
+            const surface = renderer.surface;
+            const viewMatrix = this.camera.getViewMatrix();
+            const projMatrix = this.camera.getProjectionMatrix();
+            const projectedVertices = this.projector.projectPoints(surface.vertices, null, viewMatrix, projMatrix);
+            
+            renderer.render(projectedVertices, surface.triangles, viewMatrix);
             
             this.log('MathSurfaceRenderer', 'PASS', 'Math function evaluation and render OK');
         } catch (e) {
@@ -168,16 +216,31 @@ export class SelfTester {
 
     async testVoxelRenderer() {
         try {
-            const { VoxelRenderer } = await import('../modules/voxel-renderer.js');
-            const renderer = new VoxelRenderer(this.width, this.height);
+            const { VoxelRenderer, VoxelScene } = await import('../modules/voxel-renderer.js');
+            const tempCanvas = document.createElement('canvas');
+            tempCanvas.width = this.width;
+            tempCanvas.height = this.height;
+            const renderer = new VoxelRenderer(tempCanvas);
             
-            // Create a small dummy voxel grid
-            const voxels = {};
-            voxels["0,0,0"] = { color: '#FF0000' };
-            voxels["1,0,0"] = { color: '#00FF00' };
+            // Create a small dummy voxel scene
+            const scene = new VoxelScene();
+            scene.addVoxel(0, 0, 0, '#FF0000');
+            scene.addVoxel(1, 0, 0, '#00FF00');
+            scene.addVoxel(0, 1, 0, '#0000FF');
             
-            renderer.setVoxels(voxels);
-            renderer.render(this.camera, this.projector);
+            renderer.setScene(scene);
+            
+            // Project all voxel vertices
+            const allVertices = [];
+            scene.voxels.forEach(voxel => {
+                allVertices.push(...voxel.getVertices());
+            });
+            
+            const viewMatrix = this.camera.getViewMatrix();
+            const projMatrix = this.camera.getProjectionMatrix();
+            const projectedVertices = this.projector.projectPoints(allVertices, null, viewMatrix, projMatrix);
+            
+            renderer.render(projectedVertices, viewMatrix);
             
             this.log('VoxelRenderer', 'PASS', 'Voxel projection executed');
         } catch (e) {
