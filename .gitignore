@@ -1,3 +1,1 @@
-(js/core/self-test.js has been moved from core/self-test.js, and index.html was modified - these are all source files, no build artifacts, dependencies, or temp files present)
-
-(empty - output nothing)
+(js/core/self-test.js and js/main.js are source files, no build artifacts, dependencies, or temp files detected)
