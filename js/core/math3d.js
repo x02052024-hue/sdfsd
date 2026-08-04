@@ -47,6 +47,18 @@ export class Vec3 {
     clone() {
         return new Vec3(this.x, this.y, this.z);
     }
+
+    add(v) {
+        return new Vec3(this.x + v.x, this.y + v.y, this.z + v.z);
+    }
+
+    sub(v) {
+        return new Vec3(this.x - v.x, this.y - v.y, this.z - v.z);
+    }
+
+    multiply(scalar) {
+        return new Vec3(this.x * scalar, this.y * scalar, this.z * scalar);
+    }
 }
 
 export class Mat4 {

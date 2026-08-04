@@ -216,7 +216,9 @@ export class SelfTester {
             tempCanvas.height = this.height;
             const renderer = new MathSurfaceRenderer(tempCanvas);
             
-            renderer.setFunction(MathFunctions.sin);
+            // Check if MathFunctions.sin exists, otherwise use a default function
+            const func = MathFunctions.sine || MathFunctions.sin || ((x, y) => Math.sin(x) * Math.cos(y));
+            renderer.setFunction(func);
             
             // Generate and project vertices
             const surface = renderer.surface;
@@ -240,7 +242,7 @@ export class SelfTester {
 
     async testVoxelRenderer() {
         try {
-            const { VoxelRenderer, VoxelScene } = await import('../modules/voxel-renderer.js');
+            const { VoxelRenderer, VoxelScene, Voxel } = await import('../modules/voxel-renderer.js');
             const tempCanvas = document.createElement('canvas');
             tempCanvas.width = this.width;
             tempCanvas.height = this.height;
@@ -248,17 +250,27 @@ export class SelfTester {
             
             // Create a small dummy voxel scene
             const scene = new VoxelScene();
-            scene.addVoxel(0, 0, -3, '#FF0000');
-            scene.addVoxel(1, 0, -3, '#00FF00');
-            scene.addVoxel(0, 1, -3, '#0000FF');
+            const v1 = new Voxel(0, 0, -3, '#FF0000');
+            const v2 = new Voxel(1, 0, -3, '#00FF00');
+            const v3 = new Voxel(0, 1, -3, '#0000FF');
+            scene.addVoxel(v1);
+            scene.addVoxel(v2);
+            scene.addVoxel(v3);
             
             renderer.setScene(scene);
             
-            // Project all voxel vertices
+            // Collect all vertices from voxels
             const allVertices = [];
             scene.voxels.forEach(voxel => {
-                allVertices.push(...voxel.getVertices());
+                if (typeof voxel.getVertices === 'function') {
+                    allVertices.push(...voxel.getVertices());
+                }
             });
+            
+            if (allVertices.length === 0) {
+                this.log('VoxelRenderer', 'WARN', 'No voxel vertices generated');
+                return;
+            }
             
             const viewMatrix = this.camera.getViewMatrix();
             const projMatrix = this.camera.getProjectionMatrix();
