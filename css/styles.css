@@ -1,0 +1,155 @@
+/* Main Styles for 3D Graphics Learning Environment */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: #1a1a2e;
+    color: #eee;
+    overflow: hidden;
+}
+
+#app {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+#ui-container {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    grid-template-columns: 1fr 300px;
+    height: 100%;
+}
+
+header {
+    grid-column: 1 / -1;
+    background: #16213e;
+    padding: 1rem;
+    border-bottom: 2px solid #0f3460;
+}
+
+header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    color: #e94560;
+}
+
+#main-nav {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+#main-nav button {
+    background: #0f3460;
+    color: #eee;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+#main-nav button:hover {
+    background: #e94560;
+    transform: translateY(-2px);
+}
+
+#main-nav button.active {
+    background: #e94560;
+    box-shadow: 0 0 10px rgba(233, 69, 96, 0.5);
+}
+
+#canvas-container {
+    grid-column: 1 / 2;
+    grid-row: 2 / 3;
+    background: #0a0a14;
+    position: relative;
+    overflow: hidden;
+}
+
+#main-canvas {
+    width: 100%;
+    height: 100%;
+    display: block;
+}
+
+#controls-panel {
+    grid-column: 2 / 3;
+    grid-row: 2 / 3;
+    background: #16213e;
+    border-left: 2px solid #0f3460;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+#module-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.control-group {
+    background: #0f3460;
+    padding: 1rem;
+    border-radius: 4px;
+}
+
+.control-group h3 {
+    color: #e94560;
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.control-group label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+}
+
+.control-group input[type="range"] {
+    width: 100%;
+    margin-bottom: 0.5rem;
+}
+
+.control-group input[type="number"],
+.control-group select {
+    width: 100%;
+    padding: 0.3rem;
+    margin-bottom: 0.5rem;
+    background: #1a1a2e;
+    color: #eee;
+    border: 1px solid #0f3460;
+    border-radius: 4px;
+}
+
+.control-group button {
+    width: 100%;
+    background: #e94560;
+    color: #eee;
+    border: none;
+    padding: 0.5rem;
+    border-radius: 4px;
+    cursor: pointer;
+    margin-top: 0.3rem;
+}
+
+.control-group button:hover {
+    background: #ff6b81;
+}
+
+.info-panel {
+    grid-column: 1 / 2;
+    grid-row: 3 / 4;
+    background: #16213e;
+    border-top: 2px solid #0f3460;
+    padding: 1rem;
+    font-size: 0.9rem;
+}
+
+/* Module-specific styles will be added progressively */
