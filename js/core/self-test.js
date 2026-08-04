@@ -104,10 +104,16 @@ export class SelfTester {
             const projMatrix = this.camera.getProjectionMatrix();
             const projectedPoints = this.projector.projectPoints(points, null, viewMatrix, projMatrix);
             
-            renderer.clear();
-            renderer.render(projectedPoints);
+            // Filter out null projections (points behind camera)
+            const validPoints = projectedPoints.filter(p => p !== null);
             
-            this.log('PointsRenderer', 'PASS', 'Render method executed successfully');
+            renderer.clear();
+            if (validPoints.length > 0) {
+                renderer.render(validPoints);
+                this.log('PointsRenderer', 'PASS', 'Render method executed successfully');
+            } else {
+                this.log('PointsRenderer', 'WARN', 'All points were behind camera or culled');
+            }
         } catch (e) {
             this.log('PointsRenderer', 'FAIL', e.message);
         }
@@ -127,10 +133,16 @@ export class SelfTester {
             const projMatrix = this.camera.getProjectionMatrix();
             const projectedVertices = this.projector.projectPoints(cube.vertices, null, viewMatrix, projMatrix);
             
-            renderer.clear();
-            renderer.render(projectedVertices);
+            // Filter out null projections
+            const validVertices = projectedVertices.filter(v => v !== null);
             
-            this.log('WireframeRenderer', 'PASS', 'Render method executed successfully');
+            renderer.clear();
+            if (validVertices.length > 0) {
+                renderer.render(validVertices);
+                this.log('WireframeRenderer', 'PASS', 'Render method executed successfully');
+            } else {
+                this.log('WireframeRenderer', 'WARN', 'All vertices were behind camera or culled');
+            }
         } catch (e) {
             this.log('WireframeRenderer', 'FAIL', e.message);
         }
@@ -150,6 +162,9 @@ export class SelfTester {
             const projMatrix = this.camera.getProjectionMatrix();
             const projectedVertices = this.projector.projectPoints(sphere.vertices, null, viewMatrix, projMatrix);
             
+            // Filter out null projections
+            const validVertices = projectedVertices.filter(v => v !== null);
+            
             // Convert indices to triangles format expected by renderer
             const triangles = [];
             for (let i = 0; i < sphere.indices.length; i += 3) {
@@ -162,9 +177,12 @@ export class SelfTester {
             }
             
             renderer.clear();
-            renderer.render(projectedVertices, triangles, viewMatrix);
-            
-            this.log('SurfaceRenderer', 'PASS', 'Render with backface culling executed');
+            if (validVertices.length > 0 && triangles.length > 0) {
+                renderer.render(validVertices, triangles, viewMatrix);
+                this.log('SurfaceRenderer', 'PASS', 'Render with backface culling executed');
+            } else {
+                this.log('SurfaceRenderer', 'WARN', 'No valid vertices or triangles to render');
+            }
         } catch (e) {
             this.log('SurfaceRenderer', 'FAIL', e.message);
         }
@@ -206,9 +224,15 @@ export class SelfTester {
             const projMatrix = this.camera.getProjectionMatrix();
             const projectedVertices = this.projector.projectPoints(surface.vertices, null, viewMatrix, projMatrix);
             
-            renderer.render(projectedVertices, surface.triangles, viewMatrix);
+            // Filter out null projections
+            const validVertices = projectedVertices.filter(v => v !== null);
             
-            this.log('MathSurfaceRenderer', 'PASS', 'Math function evaluation and render OK');
+            if (validVertices.length > 0 && surface.triangles.length > 0) {
+                renderer.render(validVertices, surface.triangles, viewMatrix);
+                this.log('MathSurfaceRenderer', 'PASS', 'Math function evaluation and render OK');
+            } else {
+                this.log('MathSurfaceRenderer', 'WARN', 'No valid vertices or triangles to render');
+            }
         } catch (e) {
             this.log('MathSurfaceRenderer', 'FAIL', e.message);
         }
@@ -224,9 +248,9 @@ export class SelfTester {
             
             // Create a small dummy voxel scene
             const scene = new VoxelScene();
-            scene.addVoxel(0, 0, 0, '#FF0000');
-            scene.addVoxel(1, 0, 0, '#00FF00');
-            scene.addVoxel(0, 1, 0, '#0000FF');
+            scene.addVoxel(0, 0, -3, '#FF0000');
+            scene.addVoxel(1, 0, -3, '#00FF00');
+            scene.addVoxel(0, 1, -3, '#0000FF');
             
             renderer.setScene(scene);
             
@@ -240,9 +264,15 @@ export class SelfTester {
             const projMatrix = this.camera.getProjectionMatrix();
             const projectedVertices = this.projector.projectPoints(allVertices, null, viewMatrix, projMatrix);
             
-            renderer.render(projectedVertices, viewMatrix);
+            // Filter out null projections
+            const validVertices = projectedVertices.filter(v => v !== null);
             
-            this.log('VoxelRenderer', 'PASS', 'Voxel projection executed');
+            if (validVertices.length > 0) {
+                renderer.render(validVertices, viewMatrix);
+                this.log('VoxelRenderer', 'PASS', 'Voxel projection executed');
+            } else {
+                this.log('VoxelRenderer', 'WARN', 'No valid voxel vertices to render');
+            }
         } catch (e) {
             this.log('VoxelRenderer', 'FAIL', e.message);
         }

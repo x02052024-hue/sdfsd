@@ -1,1 +1,18 @@
-(js/core/self-test.js and js/main.js are source files, no build artifacts, dependencies, or temp files detected)
+```
+# Logs and temp files
+*.log
+*.tmp
+*.swp
+
+# Environment
+.env
+.env.local
+*.env.*
+
+# Editors
+.vscode/
+.idea/
+
+# Original rules preserved
+server.log
+```
