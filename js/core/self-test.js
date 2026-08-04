@@ -4,10 +4,10 @@
  * Checks if data is actually being generated and projected.
  */
 
-import { Vec3, Mat4 } from '../core/math3d.js';
-import { Camera, Projector } from '../core/projection.js';
+import { Vec3, Mat4 } from './math3d.js';
+import { Camera, Projector } from './projection.js';
 import { generateCube, generateSphere } from '../generators/object-generators.js';
-import { generateTerrain } from '../generators/terrain-generator.js';
+import { generateSimpleTerrain as generateTerrain } from '../generators/terrain-generator.js';
 
 export class SelfTester {
     constructor() {
