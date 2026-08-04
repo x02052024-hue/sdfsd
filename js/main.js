@@ -167,6 +167,11 @@ class Application {
         const controls = document.getElementById('module-controls');
         controls.innerHTML = '';
         
+        // Set default cube mesh if not already set
+        if (!this.wireframeRenderer.vertices.length) {
+            this.wireframeRenderer.setMesh(this.cubeMesh.vertices, this.cubeMesh.edges);
+        }
+        
         const group = this.uiManager.createControlGroup('Wireframe Settings');
         controls.appendChild(group);
         
@@ -184,6 +189,11 @@ class Application {
     setupSurfaceControls() {
         const controls = document.getElementById('module-controls');
         controls.innerHTML = '';
+        
+        // Set default sphere mesh for surface rendering
+        if (!this.surfaceRenderer.vertices.length) {
+            this.surfaceRenderer.setMesh(this.sphereMesh.vertices, this.sphereMesh.triangles);
+        }
         
         const group = this.uiManager.createControlGroup('Surface Settings');
         controls.appendChild(group);
@@ -217,6 +227,9 @@ class Application {
         this.uiManager.addButton(group, 'Re-render', () => {
             this.renderRayTracing();
         });
+        
+        // Initial render
+        setTimeout(() => this.renderRayTracing(), 100);
         
         this.uiManager.addInfoText(group, 'Basic ray tracing with spheres and planes');
     }
@@ -258,6 +271,9 @@ class Application {
         this.uiManager.addButton(group, 'Generate Box', () => {
             this.generateVoxelBox();
         });
+        
+        // Initial voxel box
+        setTimeout(() => this.generateVoxelBox(), 100);
         
         this.uiManager.addInfoText(group, 'Voxel-based rendering with occlusion culling');
     }
