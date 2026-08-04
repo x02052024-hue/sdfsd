@@ -146,9 +146,9 @@ export const MathFunctions = {
     },
     
     peaks: (x, y) => {
-        const term1 = 3 * (1 - x) ** 2 * Math.exp(-(x ** 2) - (y + 1) ** 2);
-        const term2 = 10 * (x / 5 - x ** 3 - y ** 5) * Math.exp(-x ** 2 - y ** 2);
-        const term3 = -1 / 3 * Math.exp(-(x + 1) ** 2 - y ** 2);
+        const term1 = 3 * (1 - x) ** 2 * Math.exp(-(x ** 2) - ((y + 1) ** 2));
+        const term2 = 10 * (x / 5 - x ** 3 - y ** 5) * Math.exp(-(x ** 2) - (y ** 2));
+        const term3 = -1 / 3 * Math.exp(-((x + 1) ** 2) - (y ** 2));
         return term1 + term2 + term3;
     },
     

@@ -431,7 +431,7 @@ class Application {
         this.rayTracer.addObject(new Sphere(new Vec3(-2, 0.5, 2), 0.5, '#ffe66d'));
         
         // Add a plane
-        this.rayTracer.addObject(new Plane(new Vec3(0, -1, 0), new Vec30, 1, 0), '#333333'));
+        this.rayTracer.addObject(new Plane(new Vec3(0, -1, 0), new Vec3(0, 1, 0), '#333333'));
         
         this.rayTracer.renderPreview(this.camera, 2);
     }
