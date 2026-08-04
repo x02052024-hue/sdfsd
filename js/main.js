@@ -44,6 +44,13 @@ class Application {
         this.cubeMesh = null;
         this.sphereMesh = null;
         
+        // Mouse interaction state
+        this.isDragging = false;
+        this.lastMouseX = 0;
+        this.lastMouseY = 0;
+        this.cameraDistance = 5;
+        this.cameraTargetDistance = 5;
+        
         this.init();
     }
 
@@ -54,17 +61,76 @@ class Application {
         // Generate demo meshes
         this.cubeMesh = ObjectGenerators.cube(2);
         this.sphereMesh = ObjectGenerators.sphere(1.5, 16, 16);
+        this.torusMesh = ObjectGenerators.torus(1.5, 0.7, 24, 16);
+        
+        // Setup mouse controls
+        this.setupMouseControls();
         
         // Setup module callbacks
         this.setupModuleCallbacks();
         
         // Add self-test button to UI
         this.addSelfTestButton();
-        // Start with perspective module
-        this.uiManager.activateModule('perspective');
+        
+        // Start with points module showing torus
+        this.currentModule = 'points';
+        this.pointsRenderer.setMesh(this.torusMesh.vertices, []);
+        this.uiManager.activateModule('points');
         
         // Start animation loop
         this.animate();
+    }
+
+    setupMouseControls() {
+        this.canvas.addEventListener('mousedown', (e) => {
+            this.isDragging = true;
+            this.lastMouseX = e.clientX;
+            this.lastMouseY = e.clientY;
+        });
+        
+        window.addEventListener('mousemove', (e) => {
+            if (!this.isDragging) return;
+            
+            const deltaX = e.clientX - this.lastMouseX;
+            const deltaY = e.clientY - this.lastMouseY;
+            
+            this.rotationY += deltaX * 0.01;
+            this.rotationX += deltaY * 0.01;
+            
+            // Clamp vertical rotation
+            this.rotationX = Math.max(-Math.PI/2, Math.min(Math.PI/2, this.rotationX));
+            
+            this.lastMouseX = e.clientX;
+            this.lastMouseY = e.clientY;
+        });
+        
+        window.addEventListener('mouseup', () => {
+            this.isDragging = false;
+        });
+        
+        this.canvas.addEventListener('wheel', (e) => {
+            e.preventDefault();
+            this.cameraTargetDistance += e.deltaY * 0.01;
+            this.cameraTargetDistance = Math.max(2, Math.min(20, this.cameraTargetDistance));
+        }, { passive: false });
+        
+        // Add auto-fit button
+        this.addAutoFitButton();
+    }
+
+    addAutoFitButton() {
+        const controlsPanel = document.getElementById('module-controls');
+        const fitBtn = document.createElement('button');
+        fitBtn.textContent = '🎯 Auto-Fit';
+        fitBtn.style.background = '#27ae60';
+        fitBtn.style.marginTop = '1rem';
+        fitBtn.onclick = () => {
+            this.cameraDistance = 4;
+            this.cameraTargetDistance = 4;
+            this.rotationX = 0.3;
+            this.rotationY = 0;
+        };
+        controlsPanel.appendChild(fitBtn);
     }
 
     addSelfTestButton() {
@@ -428,14 +494,25 @@ class Application {
     }
 
     renderPoints() {
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Smooth camera distance
+        this.cameraDistance += (this.cameraTargetDistance - this.cameraDistance) * 0.1;
+        this.camera.position.z = this.cameraDistance;
+        
         const viewMatrix = this.camera.getViewMatrix();
         const projMatrix = this.camera.getProjectionMatrix();
         const modelMatrix = Mat4.multiply(Mat4.rotateY(this.rotationY), Mat4.rotateX(this.rotationX));
         
-        const projectedPoints = this.cubeMesh.vertices.map(v => {
+        // Use current mesh vertices (torus by default)
+        const mesh = this.pointsRenderer.vertices && this.pointsRenderer.vertices.length > 0 
+            ? { vertices: this.pointsRenderer.vertices } 
+            : this.torusMesh;
+        
+        const projectedPoints = mesh.vertices.map(v => {
             const transformed = modelMatrix.transformPoint(v);
             return this.projector.project(transformed, viewMatrix, projMatrix);
-        });
+        }).filter(p => p !== null);
         
         this.pointsRenderer.render(projectedPoints);
     }
