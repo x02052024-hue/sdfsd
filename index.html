@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Graphics Learning Environment</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div id="app">
+        <!-- UI Module Container -->
+        <div id="ui-container">
+            <header>
+                <h1>3D Graphics Learning Environment</h1>
+                <nav id="main-nav">
+                    <button data-module="perspective">Perspective</button>
+                    <button data-module="points">Points</button>
+                    <button data-module="wireframe">Wireframe</button>
+                    <button data-module="surface">Surface</button>
+                    <button data-module="raytracing">Ray Tracing</button>
+                    <button data-module="math-surface">Math Surface</button>
+                    <button data-module="voxel">Voxel</button>
+                    <button data-module="generators">Generators</button>
+                    <button data-module="terrain">Terrain</button>
+                </nav>
+            </header>
+            
+            <main id="canvas-container">
+                <canvas id="main-canvas"></canvas>
+            </main>
+            
+            <aside id="controls-panel">
+                <div id="module-controls"></div>
+            </aside>
+        </div>
+    </div>
+
+    <!-- Core Modules -->
+    <script type="module" src="js/core/math3d.js"></script>
+    <script type="module" src="js/core/projection.js"></script>
+    
+    <!-- Rendering Modules -->
+    <script type="module" src="js/modules/points-renderer.js"></script>
+    <script type="module" src="js/modules/wireframe-renderer.js"></script>
+    <script type="module" src="js/modules/surface-renderer.js"></script>
+    <script type="module" src="js/modules/raytracer.js"></script>
+    <script type="module" src="js/modules/math-surface-renderer.js"></script>
+    <script type="module" src="js/modules/voxel-renderer.js"></script>
+    
+    <!-- Generator Modules -->
+    <script type="module" src="js/generators/object-generators.js"></script>
+    <script type="module" src="js/generators/terrain-generator.js"></script>
+    
+    <!-- UI Module -->
+    <script type="module" src="js/ui/ui-manager.js"></script>
+    
+    <!-- Main Application -->
+    <script type="module" src="js/main.js"></script>
+</body>
+</html>
