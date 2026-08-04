@@ -10,9 +10,16 @@ export class PointsRenderer {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d');
         this.points = [];
-        this.pointSize = 3;
+        this.vertices = [];
+        this.edges = [];
+        this.pointSize = 4;
         this.pointColor = '#00ff88';
         this.showCoordinates = false;
+    }
+
+    setMesh(vertices, edges) {
+        this.vertices = vertices || [];
+        this.edges = edges || [];
     }
 
     setPoints(points) {
@@ -25,6 +32,8 @@ export class PointsRenderer {
 
     clear() {
         this.points = [];
+        this.vertices = [];
+        this.edges = [];
     }
 
     setPointSize(size) {
