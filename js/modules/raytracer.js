@@ -131,7 +131,7 @@ export class RayTracer {
         return closest;
     }
 
-    calculateColor(hit, depth) {
+    calculateColor(hit, depth, ray) {
         if (!hit) {
             return this.backgroundColor;
         }
@@ -150,13 +150,13 @@ export class RayTracer {
         b = Math.round(b * diffuseIntensity);
         
         // Simple reflection (recursive)
-        if (depth > 0) {
+        if (depth > 0 && ray) {
             const reflectDir = Vec3.sub(ray.direction, Vec3.multiply(hit.normal, 2 * Vec3.dot(ray.direction, hit.normal)));
             const reflectRay = new Ray(Vec3.add(hit.point, Vec3.multiply(hit.normal, 0.001)), reflectDir);
             const reflectHit = this.findIntersection(reflectRay);
             
             if (reflectHit) {
-                const reflectColor = this.calculateColor(reflectHit, depth - 1);
+                const reflectColor = this.calculateColor(reflectHit, depth - 1, reflectRay);
                 // Blend colors
                 r = Math.round(r * 0.7 + parseInt(reflectColor.slice(1, 3), 16) * 0.3);
                 g = Math.round(g * 0.7 + parseInt(reflectColor.slice(3, 5), 16) * 0.3);
@@ -195,7 +195,7 @@ export class RayTracer {
                 const ray = new Ray(rayOrigin, rayDir);
                 
                 const hit = this.findIntersection(ray);
-                const color = hit ? this.calculateColor(hit, this.maxDepth) : this.backgroundColor;
+                const color = hit ? this.calculateColor(hit, this.maxDepth, ray) : this.backgroundColor;
                 
                 // Parse color and set pixel
                 const rgb = color.match(/\d+/g);
