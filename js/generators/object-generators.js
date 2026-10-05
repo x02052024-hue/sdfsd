@@ -159,7 +159,7 @@ export const ObjectGenerators = {
             const color = this.getColorForCylinder(i, segments);
             
             triangles.push({ v0, v1, v2, normal, color });
-            triangles.push({ v0, v2, v3, normal, color });
+            triangles.push({ v0, v1: v2, v2: v3, normal, color });
         }
         
         const edges = [];
@@ -279,7 +279,7 @@ export const ObjectGenerators = {
                 const color = this.getColorForTorus(i, j, majorSegments, minorSegments);
                 
                 triangles.push({ v0, v1, v2, normal, color });
-                triangles.push({ v0, v2, v3, normal, color });
+                triangles.push({ v0, v1: v2, v2: v3, normal, color });
             }
         }
         
@@ -292,7 +292,7 @@ export const ObjectGenerators = {
         const { v0, v1, v2, v3, normal, color } = quad;
         return [
             { v0, v1, v2, normal, color },
-            { v0, v2, v3, normal, color }
+            { v0, v1: v2, v2: v3, normal, color }
         ];
     },
 
