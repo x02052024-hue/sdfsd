@@ -70,9 +70,8 @@ class Application {
         // Setup module callbacks
         this.setupModuleCallbacks();
         
-        // Add self-test and copy-log buttons to UI
+        // Add self-test button (и кнопка копирования лога — сразу под ней) to UI
         this.addSelfTestButton();
-        this.addCopyLogButton();
         
         // Start with points module showing torus
         this.currentModule = 'points';
@@ -136,13 +135,7 @@ class Application {
     }
 
     addCopyLogButton() {
-        const controlsPanel = document.getElementById('module-controls');
-        const logBtn = document.createElement('button');
-        logBtn.id = 'copy-log-btn';
-        logBtn.textContent = '📋 Copy Error Log';
-        logBtn.style.background = '#607d8b';
-        logBtn.style.marginTop = '1rem';
-        logBtn.onclick = async () => {
+        const copyToClipboard = async (btn) => {
             const json = logger.exportJSON();
             let copied = false;
             try {
@@ -166,14 +159,32 @@ class Application {
                 }
                 document.body.removeChild(ta);
             }
+            const defaultLabel = btn.dataset.label || '📋 Copy Error Log';
             if (copied) {
-                logBtn.textContent = '✅ Log Copied!';
-                setTimeout(() => { logBtn.textContent = '📋 Copy Error Log'; }, 2000);
+                btn.textContent = '✅ Log Copied!';
+                setTimeout(() => { btn.textContent = defaultLabel; }, 2000);
             } else {
-                logBtn.textContent = '❌ Copy Failed';
-                setTimeout(() => { logBtn.textContent = '📋 Copy Error Log'; }, 2000);
+                btn.textContent = '❌ Copy Failed';
+                setTimeout(() => { btn.textContent = defaultLabel; }, 2000);
             }
         };
+
+        // Обработчик для кнопки, размещённой в HTML под кнопкой самотеста
+        const htmlBtn = document.getElementById('copy-error-log-btn');
+        if (htmlBtn) {
+            htmlBtn.dataset.label = htmlBtn.textContent.trim();
+            htmlBtn.onclick = () => copyToClipboard(htmlBtn);
+        }
+
+        // Кнопка в панели управления — сразу под кнопкой запуска самотеста
+        const controlsPanel = document.getElementById('module-controls');
+        const logBtn = document.createElement('button');
+        logBtn.id = 'copy-log-btn';
+        logBtn.textContent = '📋 Copy Error Log';
+        logBtn.style.background = '#607d8b';
+        logBtn.style.marginTop = '1rem';
+        logBtn.dataset.label = logBtn.textContent;
+        logBtn.onclick = () => copyToClipboard(logBtn);
         controlsPanel.appendChild(logBtn);
     }
 
@@ -187,10 +198,11 @@ class Application {
                 await tester.runAllTests();
             };
         }
-        
+
         // Add additional button to controls panel
         const controlsPanel = document.getElementById('module-controls');
         const testBtn = document.createElement('button');
+        testBtn.id = 'run-self-test-panel-btn';
         testBtn.textContent = '🧪 Run Self-Test';
         testBtn.style.background = '#9b59b6';
         testBtn.style.marginTop = '1rem';
@@ -200,6 +212,9 @@ class Application {
             await tester.runAllTests();
         };
         controlsPanel.appendChild(testBtn);
+
+        // Кнопка копирования лога ошибок рантайма — сразу под кнопкой самотеста
+        this.addCopyLogButton();
     }
 
     resizeCanvas() {
