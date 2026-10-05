@@ -122,3 +122,27 @@ describe('Logger — интеграция с окружением', () => {
         log._showToast('should not throw'); // в Node нет document — просто выход
     });
 });
+
+describe('Logger — подготовка данных для кнопки копирования лога', () => {
+    test('exportJSON возвращает валидный JSON с entries, пригодный для clipboard.writeText', () => {
+        const log = silentLogger();
+        log.info('init');
+        log.error(new Error('boom'), 'render failed');
+        const json = log.exportJSON();
+        assert.equal(typeof json, 'string');
+        const parsed = JSON.parse(json); // не должен бросать — строка пойдёт в буфер обмена
+        assert.ok(Array.isArray(parsed.entries));
+        assert.equal(parsed.entries.length, 2);
+        assert.equal(parsed.entries[1].level, 'error');
+        assert.ok(parsed.entries[1].message.startsWith('render failed'));
+        assert.equal(parsed.entries[1].error.name, 'Error');
+        assert.ok(json.includes('"userAgent"'));
+        assert.ok(json.includes('"exportedAt"'));
+    });
+
+    test('пустой журнал сериализуется корректно (кнопка не сломается без ошибок)', () => {
+        const log = silentLogger();
+        const parsed = JSON.parse(log.exportJSON());
+        assert.deepEqual(parsed.entries, []);
+    });
+});
