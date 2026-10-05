@@ -35,9 +35,15 @@ export class UIManager {
         this.controlsPanel.innerHTML = '';
         this.currentModule = moduleName;
 
-        // Notify listeners
+        // Notify listeners (ошибки в колбэках модулей логируются, UI не ломается)
         if (this.callbacks[moduleName]) {
-            this.callbacks[moduleName].forEach(callback => callback());
+            this.callbacks[moduleName].forEach(callback => {
+                try {
+                    callback();
+                } catch (e) {
+                    console.error(`[UI] Module callback failed (${moduleName}):`, e);
+                }
+            });
         }
     }
 

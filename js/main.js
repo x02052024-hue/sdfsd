@@ -3,6 +3,7 @@
  * Initializes and coordinates all 3D graphics modules
  */
 
+import { logger } from './core/logger.js';
 import { Vec3, Mat4, Transform } from './core/math3d.js';
 import { Camera, Projector } from './core/projection.js';
 import { PointsRenderer } from './modules/points-renderer.js';
@@ -69,8 +70,9 @@ class Application {
         // Setup module callbacks
         this.setupModuleCallbacks();
         
-        // Add self-test button to UI
+        // Add self-test and copy-log buttons to UI
         this.addSelfTestButton();
+        this.addCopyLogButton();
         
         // Start with points module showing torus
         this.currentModule = 'points';
@@ -131,6 +133,48 @@ class Application {
             this.rotationY = 0;
         };
         controlsPanel.appendChild(fitBtn);
+    }
+
+    addCopyLogButton() {
+        const controlsPanel = document.getElementById('module-controls');
+        const logBtn = document.createElement('button');
+        logBtn.id = 'copy-log-btn';
+        logBtn.textContent = '📋 Copy Error Log';
+        logBtn.style.background = '#607d8b';
+        logBtn.style.marginTop = '1rem';
+        logBtn.onclick = async () => {
+            const json = logger.exportJSON();
+            let copied = false;
+            try {
+                await navigator.clipboard.writeText(json);
+                copied = true;
+            } catch (e) {
+                logger.warn(e, 'Clipboard API unavailable, using fallback');
+            }
+            if (!copied) {
+                // Fallback для браузеров без Clipboard API / небезопасного контекста
+                const ta = document.createElement('textarea');
+                ta.value = json;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                try {
+                    copied = document.execCommand('copy');
+                } catch (e) {
+                    logger.error(e, 'Fallback copy failed');
+                }
+                document.body.removeChild(ta);
+            }
+            if (copied) {
+                logBtn.textContent = '✅ Log Copied!';
+                setTimeout(() => { logBtn.textContent = '📋 Copy Error Log'; }, 2000);
+            } else {
+                logBtn.textContent = '❌ Copy Failed';
+                setTimeout(() => { logBtn.textContent = '📋 Copy Error Log'; }, 2000);
+            }
+        };
+        controlsPanel.appendChild(logBtn);
     }
 
     addSelfTestButton() {
@@ -419,6 +463,12 @@ class Application {
     }
 
     animate() {
+        // Ошибки рендера логируются, но не останавливают анимационный цикл
+        logger.runGuarded(() => this.renderFrame(), undefined, 'Render loop');
+        this.animationId = requestAnimationFrame(() => this.animate());
+    }
+
+    renderFrame() {
         this.rotationY += 0.005;
         
         switch (this.currentModule) {
@@ -450,8 +500,6 @@ class Application {
                 this.renderSurface();
                 break;
         }
-        
-        this.animationId = requestAnimationFrame(() => this.animate());
     }
 
     renderPerspective() {
@@ -602,7 +650,18 @@ class Application {
 
 // Initialize application when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    window.app = new Application();
+    // Глобальные обработчики runtime-ошибок (window error / unhandledrejection)
+    logger.installGlobalHandlers();
+    logger.info('DOM ready — initializing Application');
+    try {
+        window.app = new Application();
+        logger.info('Application initialized');
+    } catch (e) {
+        logger.error(e, 'Application initialization failed');
+    }
+    // Доступ к логгеру из консоли браузера: copy(window.logger.exportJSON())
+    // или скачивание файла: window.logger.downloadLog()
+    window.logger = logger;
 });
 
 export default Application;
