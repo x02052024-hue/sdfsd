@@ -3,6 +3,7 @@
  * Initializes and coordinates all 3D graphics modules
  */
 
+import { logger } from './core/logger.js';
 import { Vec3, Mat4, Transform } from './core/math3d.js';
 import { Camera, Projector } from './core/projection.js';
 import { PointsRenderer } from './modules/points-renderer.js';
@@ -419,6 +420,12 @@ class Application {
     }
 
     animate() {
+        // Ошибки рендера логируются, но не останавливают анимационный цикл
+        logger.runGuarded(() => this.renderFrame(), undefined, 'Render loop');
+        this.animationId = requestAnimationFrame(() => this.animate());
+    }
+
+    renderFrame() {
         this.rotationY += 0.005;
         
         switch (this.currentModule) {
@@ -450,8 +457,6 @@ class Application {
                 this.renderSurface();
                 break;
         }
-        
-        this.animationId = requestAnimationFrame(() => this.animate());
     }
 
     renderPerspective() {
@@ -602,7 +607,18 @@ class Application {
 
 // Initialize application when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-    window.app = new Application();
+    // Глобальные обработчики runtime-ошибок (window error / unhandledrejection)
+    logger.installGlobalHandlers();
+    logger.info('DOM ready — initializing Application');
+    try {
+        window.app = new Application();
+        logger.info('Application initialized');
+    } catch (e) {
+        logger.error(e, 'Application initialization failed');
+    }
+    // Доступ к логгеру из консоли браузера: copy(window.logger.exportJSON())
+    // или скачивание файла: window.logger.downloadLog()
+    window.logger = logger;
 });
 
 export default Application;
