@@ -4,10 +4,12 @@
  */
 
 export class Vec3 {
-    constructor(x = 0, y = 0, z = 0) {
+    constructor(x = 0, y = 0, z = 0, w = 0) {
         this.x = x;
         this.y = y;
         this.z = z;
+        // Компонента w используется при перспективном делении clip-координат
+        this.w = w;
     }
 
     static add(a, b) {
@@ -45,7 +47,7 @@ export class Vec3 {
     }
 
     clone() {
-        return new Vec3(this.x, this.y, this.z);
+        return new Vec3(this.x, this.y, this.z, this.w);
     }
 
     add(v) {
@@ -158,15 +160,17 @@ export class Mat4 {
         return m;
     }
 
+    // Умножение матриц A*B в столбцовом (column-major) представлении:
+    // element(row, col) хранится в data[col * 4 + row]
     static multiply(a, b) {
         const result = new Mat4();
-        for (let i = 0; i < 4; i++) {
-            for (let j = 0; j < 4; j++) {
+        for (let col = 0; col < 4; col++) {
+            for (let row = 0; row < 4; row++) {
                 let sum = 0;
                 for (let k = 0; k < 4; k++) {
-                    sum += a.data[i * 4 + k] * b.data[k * 4 + j];
+                    sum += a.data[k * 4 + row] * b.data[col * 4 + k];
                 }
-                result.data[i * 4 + j] = sum;
+                result.data[col * 4 + row] = sum;
             }
         }
         return result;
@@ -177,10 +181,13 @@ export class Mat4 {
         const y = point.y;
         const z = point.z;
         
+        // Полное преобразование 4x4 (column-major): возвращаемый Vec3 содержит
+        // компоненту w, необходимую для перспективного деления clip-координат
         return new Vec3(
             this.data[0] * x + this.data[4] * y + this.data[8] * z + this.data[12],
             this.data[1] * x + this.data[5] * y + this.data[9] * z + this.data[13],
-            this.data[2] * x + this.data[6] * y + this.data[10] * z + this.data[14]
+            this.data[2] * x + this.data[6] * y + this.data[10] * z + this.data[14],
+            this.data[3] * x + this.data[7] * y + this.data[11] * z + this.data[15]
         );
     }
 }
